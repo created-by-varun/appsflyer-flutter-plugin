@@ -605,14 +605,17 @@ static BOOL _isSKADEnabled = false;
     NSString *eventName =  call.arguments[afEventName];
     NSDictionary *eventValues = call.arguments[afEventValues];
 
-    // Explicitily setting the values to be nil if call.arguments[afEventValues] returns <null>.
     if (eventValues == [NSNull null]) {
         eventValues = nil;
     }
     
-    [[AppsFlyerLib shared] logEvent:eventName withValues:eventValues];
-    //TODO: Add callback handler
-    result(@YES);
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [[AppsFlyerLib shared] logEvent:eventName withValues:eventValues];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            result(@YES);
+        });
+    });
+
 }
 
 - (void)setMinTimeBetweenSessions:(FlutterMethodCall*)call result:(FlutterResult)result{

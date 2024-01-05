@@ -824,17 +824,28 @@ public class AppsflyerSdkPlugin implements MethodCallHandler, FlutterPlugin, Act
         result.success("success");
     }
 
-    private void logEvent(MethodCall call, MethodChannel.Result result) {
+    private void logEvent(final MethodCall call, final MethodChannel.Result result) {
 
-        AppsFlyerLib instance = AppsFlyerLib.getInstance();
+        final AppsFlyerLib instance = AppsFlyerLib.getInstance();
 
-        final String eventName = call.argument(AppsFlyerConstants.AF_EVENT_NAME);
-        final Map<String, Object> eventValues = call.argument(AppsFlyerConstants.AF_EVENT_VALUES);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final String eventName = call.argument(AppsFlyerConstants.AF_EVENT_NAME);
+                final Map<String, Object> eventValues = call.argument(AppsFlyerConstants.AF_EVENT_VALUES);
 
-        // Send event data through appsflyer sdk
-        instance.logEvent(mContext, eventName, eventValues);
+                // Send event data through appsflyer sdk
+                instance.logEvent(mContext, eventName, eventValues);
 
-        result.success(true);
+                // Run on UI thread
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        result.success(true);
+                    }
+                });
+            }
+        }).start();
     }
 
     //RD-65582
